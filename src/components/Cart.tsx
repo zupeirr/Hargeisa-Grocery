@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Plus, Minus, ShoppingBag, Truck } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,6 +42,8 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Close cart"
+              aria-label="Close cart"
             >
               <X className="w-5 h-5" />
             </button>
