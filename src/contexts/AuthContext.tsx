@@ -18,9 +18,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 // Mock user for demo purposes
 const mockUser: User = {
   id: '1',
-  name: 'Ahmed Hassan',
-  email: 'ahmed@example.com',
-  phone: '+252 61 234 5678',
+  name: 'Suber Sulub',
+  email: 'subeersulub10@gmail.com',
+  phone: '+252 63 6097266',
   addresses: [
     {
       id: '1',
