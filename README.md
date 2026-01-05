@@ -19,7 +19,7 @@ A modern grocery e-commerce platform built with React, TypeScript, and MySQL.
 - React 18
 - TypeScript
 - Vite
-- Tailwind CSS
+-  Tailwind CSS
 - Lucide React (icons)
 
 ### Backend
