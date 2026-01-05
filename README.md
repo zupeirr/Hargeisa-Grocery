@@ -37,7 +37,7 @@ A modern grocery e-commerce platform built with React, TypeScript, and MySQL.
 - MySQL (v8.0 or higher)
 - npm or yarn
 
-### Installation
+### Installation 
 
 1. **Clone the repository** (if not already done)
 
