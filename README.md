@@ -31,7 +31,7 @@ A modern grocery e-commerce platform built with React, TypeScript, and MySQL.
 - bcryptjs (password hashing)
 
 ## Getting Started
-
+ 
 ### Prerequisites
 
 - Node.js (v16 or higher)
