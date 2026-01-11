@@ -13,7 +13,7 @@ A modern grocery e-commerce platform built with React, TypeScript, and MySQL.
 - ⭐ Product ratings and reviews
 - 🎨 Modern, responsive UI with Tailwind CSS
 
-## Tech Stack
+## Tech Stack 
 
 
 ### Frontend
