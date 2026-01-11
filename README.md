@@ -15,6 +15,7 @@ A modern grocery e-commerce platform built with React, TypeScript, and MySQL.
 
 ## Tech Stack
 
+
 ### Frontend
 - React 18
 - TypeScript
