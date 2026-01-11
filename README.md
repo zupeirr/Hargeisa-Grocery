@@ -2,7 +2,7 @@
 
 A modern grocery e-commerce platform built with React, TypeScript, and MySQL.
    
-   ## Features    
+   ## Features     
  
 - 🛒 Product catalog with categories
 - 👤 User authentication and registration
