@@ -1,5 +1,5 @@
    # Hargeisa Grocery - E-commerce Platform    
-       
+        
 A modern grocery e-commerce platform built with React, TypeScript, and MySQL.
    
    ## Features     
