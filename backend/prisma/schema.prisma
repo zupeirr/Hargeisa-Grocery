@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Supplier {
+  id             String          @id @default(uuid())
+  name           String
+  contactName    String?
+  email          String?
+  phone          String?
+  address        String?
+  rating         Float           @default(5.0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  products       Product[]
+  purchaseOrders PurchaseOrder[]
+}
+
+model Product {
+  id                   String                 @id @default(uuid())
+  name                 String
+  price                Float
+  originalPrice        Float?
+  image                String?
+  images               String?                @default("[]") // JSON array of image URLs
+  category             String
+  description          String
+  inStock              Boolean                @default(true)
+  unit                 String
+  rating               Float                  @default(0)
+  reviews              Int                    @default(0)
+  barcode              String?
+  sku                  String?                @unique
+  stockLevel           Int                    @default(100)
+  lowStockAlert        Int                    @default(10)
+  expiryDate           DateTime?
+  isDamaged            Boolean                @default(false)
+  damagedQty           Int                    @default(0)
+  damagedReason        String?
+  supplierId           String?
+  supplier             Supplier?              @relation(fields: [supplierId], references: [id])
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  OrderItems           OrderItem[]
+  PoItems              PoItem[]
+  Review               Review[]
+  InventoryTransaction InventoryTransaction[]
+}
+
+model Customer {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  phone         String?
+  address       String?
+  joinDate      DateTime @default(now())
+  totalOrders   Int      @default(0)
+  totalSpent    Float    @default(0)
+  loyaltyPoints Int      @default(0)
+  segment       String   @default("new") // e.g. "vip", "returning", "new"
+  orders        Order[]
+  reviews       Review[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  customerId      String
+  customer        Customer    @relation(fields: [customerId], references: [id])
+  status          String      @default("pending") // pending, confirmed, preparing, out-for-delivery, delivered, cancelled
+  total           Float
+  orderDate       DateTime    @default(now())
+  paymentMethod   String
+  deliveryAddress String      // Storing as JSON string for simplicity
+  items           OrderItem[]
+  delivery        Delivery?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float    // Price at the time of order
+}
+
+model PurchaseOrder {
+  id          String   @id @default(uuid())
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  status      String   @default("draft") // draft, sent, received, cancelled
+  totalAmount   Float    @default(0)
+  paymentStatus String   @default("unpaid") // unpaid, partial, paid
+  paymentDate   DateTime?
+  orderDate     DateTime @default(now())
+  items       PoItem[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PoItem {
+  id              String        @id @default(uuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  quantity        Int
+  unitCost        Float
+}
+
+model DiscountCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  discountPct Float    // e.g. 10.0 for 10%
+  maxUses     Int      @default(100)
+  uses        Int      @default(0)
+  validFrom   DateTime @default(now())
+  validUntil  DateTime?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  category    String   // e.g. "Utilities", "Payroll", "Marketing"
+  amount      Float
+  date        DateTime @default(now())
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model InventoryTransaction {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  type      String   // "stock_in" | "stock_out" | "adjustment" | "damaged"
+  quantity  Int
+  note      String?
+  reference String?  // e.g. PO number or order ID
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String // Storing as JSON string
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  rating     Int
+  comment    String?
+  status     String   @default("published")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Employee {
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  phone      String?
+  role       String   @default("cashier") // admin, manager, cashier, driver
+  status     String   @default("active")  // active, inactive, leave
+  baseSalary Float    @default(0)
+  joinDate   DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  attendance Attendance[]
+  salaries   SalaryRecord[]
+  deliveries Delivery[]
+}
+
+model Attendance {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  date       DateTime @default(now())
+  status     String   @default("present") // present, absent, half-day, late
+  notes      String?
+  createdAt  DateTime @default(now())
+}
+
+model SalaryRecord {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  amount      Float
+  bonus       Float    @default(0)
+  deduction   Float    @default(0)
+  paymentDate DateTime @default(now())
+  status      String   @default("paid") // paid, pending
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  image       String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Delivery {
+  id            String    @id @default(uuid())
+  orderId       String    @unique
+  order         Order     @relation(fields: [orderId], references: [id])
+  driverId      String?
+  driver        Employee? @relation(fields: [driverId], references: [id])
+  status        String    @default("pending") // pending, picked_up, in_transit, delivered, failed
+  trackingCode  String    @unique
+  notes         String?
+  estimatedTime DateTime?
+  actualTime    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
