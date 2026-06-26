@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, User, Search, Menu, X, MapPin, Phone } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,7 +6,9 @@ import Cart from './Cart';
 import AuthModal from './AuthModal';
 import SearchResults from './SearchResults';
 import OrderTracking from './OrderTracking';
-import { products } from '../data/products';
+import { getProducts } from '../data/adminStore';
+import { Product, Order } from '../types';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface HeaderProps {
   onCategorySelect: (category: string) => void;
@@ -15,12 +17,28 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const { state: cartState } = useCart();
   const { state: authState, logout } = useAuth();
+  const [products, setProducts] = useState<Product[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState(false);
+  const [trackedOrder, setTrackedOrder] = useState<Order | null>(null);
+  const { settings } = useSettings();
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getProducts();
+        setProducts(data);
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const categories = [
     { id: 'fruits', name: 'Fruits' },
@@ -36,12 +54,26 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const totalItems = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
 
   React.useEffect(() => {
-    const handleOpenOrderTracking = () => {
+    const handleOpenOrderTracking = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const order = customEvent.detail?.order;
+      if (order) {
+        setTrackedOrder(order);
+      } else {
+        setTrackedOrder(null);
+      }
       setIsOrderTrackingOpen(true);
+    };
+    const handleOpenAuthModal = () => {
+      setIsAuthModalOpen(true);
     };
 
     window.addEventListener('openOrderTracking', handleOpenOrderTracking);
-    return () => window.removeEventListener('openOrderTracking', handleOpenOrderTracking);
+    window.addEventListener('openAuthModal', handleOpenAuthModal);
+    return () => {
+      window.removeEventListener('openOrderTracking', handleOpenOrderTracking);
+      window.removeEventListener('openAuthModal', handleOpenAuthModal);
+    };
   }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,19 +94,19 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
         {/* Top bar */}
         <div className="bg-green-600 text-white py-2">
           <div className="max-w-7xl mx-auto px-4 flex justify-between items-center text-sm">
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
               <div className="flex items-center space-x-1">
-                <MapPin className="w-4 h-4" />
-                <span>Hargeisa, Somaliland</span>
+                <MapPin className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate max-w-[200px] sm:max-w-none">{settings.address.split(',')[0]}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Phone className="w-4 h-4" />
-                <span>+252 63 609 7266</span>
+                <Phone className="w-4 h-4 flex-shrink-0" />
+                <span>{settings.contactPhone}</span>
               </div>
             </div>
             <div className="hidden md:block">
               <div className="flex items-center space-x-4">
-                <span>Free delivery on orders over $25</span>
+                <span>Free delivery on orders over {settings.currencySymbol}{settings.freeDeliveryThreshold}</span>
                 <button
                   onClick={() => setIsOrderTrackingOpen(true)}
                   className="hover:underline"
@@ -92,10 +124,14 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
             {/* Logo */}
             <div className="flex items-center space-x-2">
               <div className="bg-green-600 p-2 rounded-lg">
-                <ShoppingCart className="w-6 h-6 text-white" />
+                {settings.storeLogo ? (
+                  <img src={settings.storeLogo} alt={settings.storeName} className="w-6 h-6 object-contain" />
+                ) : (
+                  <ShoppingCart className="w-6 h-6 text-white" />
+                )}
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">Hargeisa Grocery</h1>
+                <h1 className="text-2xl font-bold text-gray-800">{settings.storeName}</h1>
                 <p className="text-sm text-gray-600">Fresh. Fast. Local.</p>
               </div>
             </div>
@@ -255,7 +291,11 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
       {/* Order tracking */}
       <OrderTracking
         isOpen={isOrderTrackingOpen}
-        onClose={() => setIsOrderTrackingOpen(false)}
+        onClose={() => {
+          setIsOrderTrackingOpen(false);
+          setTrackedOrder(null);
+        }}
+        initialOrder={trackedOrder}
       />
     </>
   );

@@ -5,11 +5,24 @@ import { Order } from '../types';
 interface OrderTrackingProps {
   isOpen: boolean;
   onClose: () => void;
+  initialOrder?: Order | null;
 }
 
-const OrderTracking: React.FC<OrderTrackingProps> = ({ isOpen, onClose }) => {
+const OrderTracking: React.FC<OrderTrackingProps> = ({ isOpen, onClose, initialOrder }) => {
   const [trackingId, setTrackingId] = useState('');
   const [order, setOrder] = useState<Order | null>(null);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      if (initialOrder) {
+        setOrder(initialOrder);
+        setTrackingId(initialOrder.id);
+      } else {
+        setOrder(null);
+        setTrackingId('');
+      }
+    }
+  }, [isOpen, initialOrder]);
 
   // Mock order data
   const mockOrder: Order = {
@@ -144,9 +157,15 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ isOpen, onClose }) => {
                 <div className="flex items-start space-x-3">
                   <MapPin className="w-5 h-5 text-green-600 mt-1" />
                   <div>
-                    <p className="font-medium">{order.deliveryAddress.label}</p>
-                    <p className="text-gray-600">{order.deliveryAddress.street}</p>
-                    <p className="text-gray-600">{order.deliveryAddress.district}, {order.deliveryAddress.city}</p>
+                    {typeof order.deliveryAddress === 'string' ? (
+                      <p className="text-gray-600 text-sm whitespace-pre-wrap">{order.deliveryAddress}</p>
+                    ) : (
+                      <>
+                        <p className="font-medium">{order.deliveryAddress.label}</p>
+                        <p className="text-gray-600">{order.deliveryAddress.street}</p>
+                        <p className="text-gray-600">{order.deliveryAddress.district}, {order.deliveryAddress.city}</p>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">

@@ -1,22 +1,21 @@
 import React from 'react';
 import { Truck, Clock, Shield, Star } from 'lucide-react';
+import { useSettings } from '../contexts/SettingsContext';
 
 const Hero: React.FC = () => {
+  const { settings } = useSettings();
+  
   return (
     <div className="bg-gradient-to-br from-green-50 to-green-100">
       {/* Main hero section */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6 leading-tight">
-              Fresh Groceries
-              <span className="text-green-600"> Delivered</span>
-              <br />
-              to Your Door
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6 leading-tight whitespace-pre-line">
+              {settings.heroTitle}
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Get the freshest produce, quality meats, and everyday essentials delivered 
-              fast in Hargeisa. Supporting local families with trusted, affordable groceries.
+              {settings.heroSubtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button
@@ -36,9 +35,9 @@ const Hero: React.FC = () => {
           
           <div className="relative">
             <img
-              src="https://images.pexels.com/photos/1435735/pexels-photo-1435735.jpeg?auto=compress&cs=tinysrgb&w=600"
-              alt="Fresh groceries"
-              className="rounded-2xl shadow-2xl"
+              src={settings.homepageBanner || "https://images.pexels.com/photos/1435735/pexels-photo-1435735.jpeg?auto=compress&cs=tinysrgb&w=600"}
+              alt="Store banner"
+              className="rounded-2xl shadow-2xl h-64 md:h-[400px] w-full object-cover"
             />
             <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-lg">
               <div className="flex items-center space-x-2">
@@ -61,7 +60,7 @@ const Hero: React.FC = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Fast Delivery</h3>
               <p className="text-gray-600">
-                Same-day delivery for orders placed before 2PM. Free delivery on orders over $25.
+                Free delivery on orders over {settings.currencySymbol}{settings.freeDeliveryThreshold}. Standard delivery fee is {settings.currencySymbol}{settings.deliveryFee}.
               </p>
             </div>
             
