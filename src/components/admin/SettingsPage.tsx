@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Save, Store, Layout, Lock, ShoppingBag, CreditCard, Palette, Settings as SystemIcon, Shield, Upload, Clock, Globe, CheckCircle2, XCircle, Activity, Zap, Lock as LockIcon, Server, Layers } from 'lucide-react';
 import { getSettings, saveSettings, changeAdminPassword } from '../../data/adminStore';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 type Tab = 'store' | 'website' | 'auth' | 'order' | 'payment' | 'appearance' | 'system' | 'security' | 'nfr';
 
