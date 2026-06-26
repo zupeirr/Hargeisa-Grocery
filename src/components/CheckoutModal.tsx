@@ -1,30 +1,29 @@
 import React, { useState } from 'react';
-import { X, MapPin, CreditCard, Truck, CheckCircle } from 'lucide-react';
+import { X, MapPin, CreditCard, CheckCircle } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Address } from '../types';
+import { createOrderAPI, createCustomerAPI } from '../data/adminStore';
 
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOrderSuccess?: () => void;
 }
 
-const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
+const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, onOrderSuccess }) => {
   const { state: cartState, dispatch } = useCart();
   const { state: authState } = useAuth();
   const [step, setStep] = useState(1);
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const [guestName, setGuestName] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'zaad' | 'evc' | 'edahab' | 'cod'>('zaad');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [placedOrderId, setPlacedOrderId] = useState('');
 
   const deliveryFee = cartState.total >= 25 ? 0 : 3.50;
   const finalTotal = cartState.total + deliveryFee;
-
-  const handleAddressSelect = (address: Address) => {
-    setSelectedAddress(address);
-    setStep(2);
-  };
 
   const handlePaymentSelect = (method: 'zaad' | 'evc' | 'edahab' | 'cod') => {
     setPaymentMethod(method);
@@ -34,19 +33,74 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
     
-    // Simulate order processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
-    setOrderComplete(true);
-    
-    // Clear cart after successful order
-    setTimeout(() => {
-      dispatch({ type: 'CLEAR_CART' });
-      onClose();
-      setStep(1);
-      setOrderComplete(false);
-    }, 3000);
+    try {
+      const payloadItems = cartState.items.map(item => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+        price: item.product.price
+      }));
+
+      let customerId = authState.user?.id;
+      if (!customerId || !customerId.includes('-')) {
+        try {
+          const nameToUse = authState.user?.name || guestName || 'Guest';
+          const emailToUse = authState.user?.email || `guest_${Date.now()}@hargeisa.com`;
+          const phoneToUse = authState.user?.phone || guestPhone || '0000000';
+          const guestCust = await createCustomerAPI(nameToUse, emailToUse, phoneToUse);
+          customerId = guestCust.id;
+
+          // Attempt to patch local storage so we don't keep creating duplicates
+          if (authState.user && authState.user.id !== customerId) {
+            const sessionStr = localStorage.getItem('hargeisa_session');
+            if (sessionStr) {
+              const sessionObj = JSON.parse(sessionStr);
+              sessionObj.id = customerId;
+              localStorage.setItem('hargeisa_session', JSON.stringify(sessionObj));
+            }
+          }
+        } catch (e) {
+          console.error("Failed to create guest customer", e);
+          customerId = '1';
+        }
+      }
+
+      // Create the order on backend database
+      const createdOrder = await createOrderAPI({
+        customerId: customerId,
+        items: payloadItems,
+        total: finalTotal,
+        paymentMethod: paymentMethod,
+        deliveryAddress: selectedAddress,
+      });
+
+      setPlacedOrderId(createdOrder.id);
+      setIsProcessing(false);
+      setOrderComplete(true);
+
+      // Clear cart after successful order
+      setTimeout(() => {
+        dispatch({ type: 'CLEAR_CART' });
+        if (onOrderSuccess) {
+          onOrderSuccess();
+        } else {
+          onClose();
+        }
+        setStep(1);
+        setSelectedAddress('');
+        setOrderComplete(false);
+        setPlacedOrderId('');
+
+        // Dispatch the openOrderTracking event with the new order details
+        window.dispatchEvent(new CustomEvent('openOrderTracking', {
+          detail: { order: createdOrder }
+        }));
+      }, 3000);
+
+    } catch (err: any) {
+      console.error('Failed to place order on backend:', err);
+      alert(err.message || 'Failed to place order. Please try again.');
+      setIsProcessing(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -60,7 +114,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
             <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Order Placed!</h2>
             <p className="text-gray-600 mb-4">Your order has been confirmed and will be delivered soon.</p>
-            <p className="text-sm text-gray-500">Order ID: HG-2024-001</p>
+            <p className="text-sm text-gray-500">Order ID: {placedOrderId}</p>
           </div>
         </div>
       </div>
@@ -99,33 +153,39 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
           <div className="flex-1 overflow-y-auto p-4">
             {step === 1 && (
               <div className="space-y-4">
-                <h3 className="font-semibold text-lg mb-4">Select Delivery Address</h3>
-                
-                {authState.user?.addresses.map((address) => (
-                  <div
-                    key={address.id}
-                    onClick={() => handleAddressSelect(address)}
-                    className="p-4 border border-gray-200 rounded-lg hover:border-green-500 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <MapPin className="w-5 h-5 text-green-600 mt-1" />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="font-medium">{address.label}</span>
-                          {address.isDefault && (
-                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Default</span>
-                          )}
-                        </div>
-                        <p className="text-gray-600 text-sm">{address.street}</p>
-                        <p className="text-gray-600 text-sm">{address.district}, {address.city}</p>
-                      </div>
+                {!authState.isAuthenticated && (
+                  <>
+                    <h3 className="font-semibold text-lg mb-4">Contact Information</h3>
+                    <div className="space-y-4">
+                      <input
+                        type="text"
+                        placeholder="Full Name"
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                      <input
+                        type="tel"
+                        placeholder="Phone Number"
+                        value={guestPhone}
+                        onChange={(e) => setGuestPhone(e.target.value)}
+                        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
                     </div>
-                  </div>
-                ))}
-
-                <button className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-green-500 hover:text-green-600 transition-colors">
-                  + Add New Address
-                </button>
+                    <hr className="my-6 border-gray-200" />
+                  </>
+                )}
+                <h3 className="font-semibold text-lg mb-4">Enter Delivery Address</h3>
+                
+                <div className="relative">
+                  <textarea
+                    value={selectedAddress}
+                    onChange={(e) => setSelectedAddress(e.target.value)}
+                    placeholder="Enter your full address including district and landmarks"
+                    rows={5}
+                    className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-gray-800"
+                  />
+                </div>
               </div>
             )}
 
@@ -187,9 +247,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
                   <div className="flex items-start space-x-2">
                     <MapPin className="w-4 h-4 text-green-600 mt-1" />
                     <div>
-                      <p className="font-medium text-sm">{selectedAddress?.label}</p>
-                      <p className="text-gray-600 text-xs">{selectedAddress?.street}</p>
-                      <p className="text-gray-600 text-xs">{selectedAddress?.district}, {selectedAddress?.city}</p>
+                      <p className="font-medium text-sm">Delivery Address</p>
+                      <p className="text-gray-600 text-sm whitespace-pre-wrap">{selectedAddress}</p>
                     </div>
                   </div>
                 </div>
@@ -235,7 +294,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
               
               {step < 3 ? (
                 <button
-                  disabled={step === 1 && !selectedAddress}
+                  onClick={() => setStep(step + 1)}
+                  disabled={step === 1 && (!selectedAddress.trim() || (!authState.isAuthenticated && (!guestName.trim() || !guestPhone.trim())))}
                   className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue

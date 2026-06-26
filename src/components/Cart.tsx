@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, Minus, ShoppingBag, Truck } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 import CheckoutModal from './CheckoutModal';
 
 interface CartProps {
@@ -12,7 +13,16 @@ interface CartProps {
 const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const { state, dispatch } = useCart();
   const { state: authState } = useAuth();
+  const { settings } = useSettings();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isCheckoutPending, setIsCheckoutPending] = useState(false);
+
+  React.useEffect(() => {
+    if (authState.isAuthenticated && isCheckoutPending) {
+      setIsCheckoutPending(false);
+      setIsCheckoutOpen(true);
+    }
+  }, [authState.isAuthenticated, isCheckoutPending]);
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
     if (quantity === 0) {
@@ -134,15 +144,16 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
               {/* Checkout button */}
               <button
                 onClick={() => {
-                  if (!authState.isAuthenticated) {
-                    alert('Please sign in to checkout');
+                  if (!authState.isAuthenticated && !settings.guestCheckout) {
+                    setIsCheckoutPending(true);
+                    window.dispatchEvent(new CustomEvent('openAuthModal'));
                     return;
                   }
                   setIsCheckoutOpen(true);
                 }}
                 className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
               >
-                {authState.isAuthenticated ? 'Proceed to Checkout' : 'Sign In to Checkout'}
+                {authState.isAuthenticated ? 'Proceed to Checkout' : (settings.guestCheckout ? 'Checkout as Guest' : 'Sign In to Checkout')}
               </button>
 
               {state.total < 25 && (
@@ -158,6 +169,10 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
+        onOrderSuccess={() => {
+          setIsCheckoutOpen(false);
+          onClose();
+        }}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, User, Phone } from 'lucide-react';
+import { X, Lock, User, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface AuthModalProps {
@@ -11,9 +11,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
+    phone: '',
     password: '',
-    phone: ''
+    confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,20 +25,46 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setIsLoading(true);
     setError('');
 
+    // Validate phone number length
+    if (formData.phone.trim().length < 7) {
+      setError('Please enter a valid phone number (at least 7 digits).');
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate password length
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       let success = false;
       
       if (isLogin) {
-        success = await login(formData.email, formData.password);
+        success = await login(formData.phone, formData.password);
+        if (!success) {
+          setError('Invalid phone number or password.');
+        }
       } else {
-        success = await register(formData.name, formData.email, formData.password, formData.phone);
+        if (formData.password !== formData.confirmPassword) {
+          setError('Passwords do not match.');
+          setIsLoading(false);
+          return;
+        }
+        try {
+          success = await register(formData.name, formData.phone, formData.password);
+        } catch (err: any) {
+          setError(err.message || 'Registration failed.');
+          setIsLoading(false);
+          return;
+        }
       }
 
       if (success) {
         onClose();
-        setFormData({ name: '', email: '', password: '', phone: '' });
-      } else {
-        setError('Invalid credentials. Try demo@hargeisa.com / demo123');
+        setFormData({ name: '', phone: '', password: '', confirmPassword: '' });
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -95,32 +121,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             )}
 
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                value={formData.email}
+                type="tel"
+                name="phone"
+                placeholder="Phone Number"
+                value={formData.phone}
                 onChange={handleInputChange}
                 required
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
-
-            {!isLogin && (
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="tel"
-                  name="phone"
-                  placeholder="Phone Number"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-            )}
 
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -134,6 +145,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
+
+            {!isLogin && (
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+            )}
 
             {error && (
               <div className="text-red-600 text-sm text-center">{error}</div>
@@ -156,7 +182,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setError('');
-                  setFormData({ name: '', email: '', password: '', phone: '' });
+                  setFormData({ name: '', phone: '', password: '', confirmPassword: '' });
                 }}
                 className="ml-2 text-green-600 hover:text-green-700 font-medium"
               >
