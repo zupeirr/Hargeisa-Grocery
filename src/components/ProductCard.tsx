@@ -1,16 +1,18 @@
 import React from 'react';
 import { Star, Plus, Minus, ShoppingCart, Heart } from 'lucide-react';
-import { Product } from '../types';
 import { useCart } from '../contexts/CartContext';
+import ProductReviewsModal from './ProductReviewsModal';
 
 interface ProductCardProps {
   product: Product;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product: initialProduct }) => {
   const { state, dispatch } = useCart();
   const [isFavorite, setIsFavorite] = React.useState(false);
-  
+  const [isReviewsOpen, setIsReviewsOpen] = React.useState(false);
+  const [product, setProduct] = React.useState(initialProduct);
+
   const cartItem = state.items.find(item => item.product.id === product.id);
   const quantity = cartItem?.quantity || 0;
 
@@ -57,7 +59,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
 
         {/* Rating */}
-        <div className="flex items-center mb-3">
+        <button 
+          onClick={() => setIsReviewsOpen(true)}
+          className="flex items-center mb-3 hover:opacity-80 transition-opacity"
+        >
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
               <Star
@@ -70,10 +75,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               />
             ))}
           </div>
-          <span className="text-sm text-gray-600 ml-2">
-            {product.rating} ({product.reviews})
+          <span className="text-sm text-gray-600 ml-2 hover:underline">
+            {product.rating} ({product.reviews} reviews)
           </span>
-        </div>
+        </button>
 
         {/* Price */}
         <div className="flex items-center justify-between mb-4">
@@ -126,6 +131,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         )}
       </div>
+
+      <ProductReviewsModal
+        product={product}
+        isOpen={isReviewsOpen}
+        onClose={() => setIsReviewsOpen(false)}
+        onReviewSubmitted={() => {
+          // Re-fetch product data here if needed, or simply reload page.
+          // For simplicity, we could just reload the window or let the parent handle it
+          // Wait, we don't have a way to fetch a single product yet.
+          // We'll just alert or let the user refresh, or just refresh.
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };
