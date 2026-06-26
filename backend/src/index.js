@@ -52,14 +52,14 @@ app.use((req, _res, next) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://hargeisa-grocery.vercel.app', 'https://hargeisa-grocery.vercel.app'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   }
 });
 
 app.set('io', io);
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://hargeisa-grocery.vercel.app', 'https://hargeisa-grocery.vercel.app'] }));
 app.use(express.json({ limit: '10mb' })); // limit JSON body size (prevents payload attacks)
 
 // Serve uploaded images as static files
