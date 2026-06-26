@@ -1,7 +1,10 @@
 import React from 'react';
 import { ShoppingCart, Phone, Mail, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { useSettings } from '../contexts/SettingsContext';
 
 const Footer: React.FC = () => {
+  const { settings } = useSettings();
+  
   return (
     <footer className="bg-gray-800 text-white">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -10,21 +13,36 @@ const Footer: React.FC = () => {
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <div className="bg-green-600 p-2 rounded-lg">
-                <ShoppingCart className="w-6 h-6 text-white" />
+                {settings.storeLogo ? (
+                  <img src={settings.storeLogo} alt={settings.storeName} className="w-6 h-6 object-contain" />
+                ) : (
+                  <ShoppingCart className="w-6 h-6 text-white" />
+                )}
               </div>
               <div>
-                <h3 className="text-xl font-bold">Hargeisa Grocery</h3>
+                <h3 className="text-xl font-bold">{settings.storeName}</h3>
                 <p className="text-sm text-gray-400">Fresh. Fast. Local.</p>
               </div>
             </div>
             <p className="text-gray-400 mb-4">
-              Your trusted neighborhood grocery store, bringing fresh quality products 
-              to families across Hargeisa since 2024.
+              {settings.storeDescription}
             </p>
             <div className="flex space-x-4">
-              <Facebook className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-              <Instagram className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-              <Twitter className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
+              {settings.facebookLink && settings.facebookLink !== '#' && (
+                <a href={settings.facebookLink} target="_blank" rel="noopener noreferrer">
+                  <Facebook className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
+                </a>
+              )}
+              {settings.instagramLink && settings.instagramLink !== '#' && (
+                <a href={settings.instagramLink} target="_blank" rel="noopener noreferrer">
+                  <Instagram className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
+                </a>
+              )}
+              {settings.twitterLink && settings.twitterLink !== '#' && (
+                <a href={settings.twitterLink} target="_blank" rel="noopener noreferrer">
+                  <Twitter className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -68,15 +86,15 @@ const Footer: React.FC = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <MapPin className="w-5 h-5 text-green-600" />
-                <span className="text-gray-400">Jidka Xoriyada, Hargeisa, Somaliland</span>
+                <span className="text-gray-400">{settings.address}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-green-600" />
-                <span className="text-gray-400">+252 63 609 7266</span>
+                <span className="text-gray-400">{settings.contactPhone}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-green-600" />
-                <span className="text-gray-400">info@hargeisagrocery.com</span>
+                <span className="text-gray-400">{settings.contactEmail}</span>
               </div>
             </div>
 
@@ -84,9 +102,9 @@ const Footer: React.FC = () => {
             <div className="mt-6">
               <h5 className="font-semibold mb-2">Payment Methods</h5>
               <div className="flex space-x-2">
-                <div className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold">ZAAD</div>
-                <div className="bg-orange-600 text-white px-3 py-1 rounded text-sm font-semibold">EVC</div>
-                <div className="bg-gray-600 text-white px-3 py-1 rounded text-sm font-semibold">Edahab</div>
+                {settings.zaadEnabled && <div className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold">ZAAD</div>}
+                {settings.evcEnabled && <div className="bg-orange-600 text-white px-3 py-1 rounded text-sm font-semibold">EVC</div>}
+                {settings.edahabEnabled && <div className="bg-gray-600 text-white px-3 py-1 rounded text-sm font-semibold">Edahab</div>}
               </div>
             </div>
           </div>
