@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -23,7 +23,7 @@ model Supplier {
   contactName    String?
   email          String?
   phone          String?
-  address        String?
+  address        String?         @db.Text
   rating         Float           @default(5.0)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -37,9 +37,9 @@ model Product {
   price                Float
   originalPrice        Float?
   image                String?
-  images               String?                @default("[]") // JSON array of image URLs
+  images               String?                @db.Text // JSON array of image URLs
   category             String
-  description          String
+  description          String                 @db.Text
   inStock              Boolean                @default(true)
   unit                 String
   rating               Float                  @default(0)
@@ -67,7 +67,7 @@ model Customer {
   name          String
   email         String   @unique
   phone         String?
-  address       String?
+  address       String?  @db.Text
   joinDate      DateTime @default(now())
   totalOrders   Int      @default(0)
   totalSpent    Float    @default(0)
@@ -87,7 +87,7 @@ model Order {
   total           Float
   orderDate       DateTime    @default(now())
   paymentMethod   String
-  deliveryAddress String      // Storing as JSON string for simplicity
+  deliveryAddress String      @db.Text // Storing as JSON string for simplicity
   items           OrderItem[]
   delivery        Delivery?
   createdAt       DateTime    @default(now())
@@ -146,7 +146,7 @@ model Expense {
   category    String   // e.g. "Utilities", "Payroll", "Marketing"
   amount      Float
   date        DateTime @default(now())
-  description String?
+  description String?  @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -165,7 +165,7 @@ model InventoryTransaction {
 model Setting {
   id    String @id @default(uuid())
   key   String @unique
-  value String // Storing as JSON string
+  value String @db.Text // Storing as JSON string
 }
 
 model Review {
@@ -175,7 +175,7 @@ model Review {
   productId  String
   product    Product  @relation(fields: [productId], references: [id])
   rating     Int
-  comment    String?
+  comment    String?  @db.Text
   status     String   @default("published")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -204,7 +204,7 @@ model Attendance {
   employee   Employee @relation(fields: [employeeId], references: [id])
   date       DateTime @default(now())
   status     String   @default("present") // present, absent, half-day, late
-  notes      String?
+  notes      String?  @db.Text
   createdAt  DateTime @default(now())
 }
 
@@ -224,7 +224,7 @@ model SalaryRecord {
 model Category {
   id          String   @id @default(uuid())
   name        String   @unique
-  description String?
+  description String?  @db.Text
   image       String?
   status      String   @default("active")
   createdAt   DateTime @default(now())
@@ -239,7 +239,7 @@ model Delivery {
   driver        Employee? @relation(fields: [driverId], references: [id])
   status        String    @default("pending") // pending, picked_up, in_transit, delivered, failed
   trackingCode  String    @unique
-  notes         String?
+  notes         String?   @db.Text
   estimatedTime DateTime?
   actualTime    DateTime?
   createdAt     DateTime  @default(now())
