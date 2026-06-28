@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: hargeisa-grocery-1
+    env: node
+    rootDir: backend
+    region: oregon
+    plan: starter
+    buildCommand: npm install && npx prisma migrate deploy
+    startCommand: npm start
+    
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: FRONTEND_URL
+        value: https://hargeisa-grocery.vercel.app
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+    
+    autoDeploy: true
+    healthCheckPath: /api/health
