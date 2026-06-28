@@ -13,15 +13,14 @@ const PORT = process.env.PORT || 3001;
 
 // ─── Security: HTTP Security Headers (XSS, clickjacking, MIME sniffing) ──────
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow image serving from /uploads
-  contentSecurityPolicy: false, // disable CSP for dev; enable in production
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false,
 }));
 
 // ─── Performance: Gzip Compression ───────────────────────────────────────────
 app.use(compression());
 
 // ─── Rate Limiting ────────────────────────────────────────────────────────────
-// General API rate limit: 200 requests per 15 minutes per IP
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
@@ -30,7 +29,6 @@ const generalLimiter = rateLimit({
   message: { error: 'Too many requests, please try again later.' },
 });
 
-// Auth rate limit: stricter — 20 requests per 15 minutes per IP (brute-force prevention)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -49,22 +47,42 @@ app.use((req, _res, next) => {
   next();
 });
 
-// ─── CORS configuration ────────────────────────────────────────────────────────
+// ─── CORS configuration (FIXED) ────────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://hargeisa-grocery.vercel.app',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+console.log(`🔐 CORS Origins allowed: ${ALLOWED_ORIGINS.join(', ')}`);
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️  CORS rejected origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: corsOptions
+  cors: corsOptions,
+  transports: ['websocket', 'polling'],
+  pingInterval: 25000,
+  pingTimeout: 60000
 });
 
 app.set('io', io);
 
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' })); // limit JSON body size (prevents payload attacks)
+app.use(express.json({ limit: '10mb' }));
 
 // Serve uploaded images as static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -94,7 +112,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     message: 'Hargeisa Grocery API is running 🚀',
-    security: { helmet: true, rateLimit: true, compression: true },
+    security: { helmet: true, rateLimit: true, compression: true, cors: true },
     timestamp: new Date().toISOString(),
   });
 });
@@ -121,4 +139,5 @@ server.listen(PORT, () => {
   console.log(`✅ Backend server running at http://localhost:${PORT}`);
   console.log(`🔒 Security: helmet + rate-limiting enabled`);
   console.log(`⚡ Performance: gzip compression enabled`);
+  console.log(`📡 Socket.IO: enabled with CORS`);
 });
