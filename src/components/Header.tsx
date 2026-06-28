@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, User, Search, Menu, X, MapPin, Phone } from 'lucide-react';
+import { ShoppingCart, Search, Menu, X, MapPin, Phone } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContext';
+
 import Cart from './Cart';
-import AuthModal from './AuthModal';
 import SearchResults from './SearchResults';
 import OrderTracking from './OrderTracking';
 import { getProducts } from '../data/adminStore';
@@ -16,10 +15,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const { state: cartState } = useCart();
-  const { state: authState, logout } = useAuth();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -64,15 +62,10 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
       }
       setIsOrderTrackingOpen(true);
     };
-    const handleOpenAuthModal = () => {
-      setIsAuthModalOpen(true);
-    };
 
     window.addEventListener('openOrderTracking', handleOpenOrderTracking);
-    window.addEventListener('openAuthModal', handleOpenAuthModal);
     return () => {
       window.removeEventListener('openOrderTracking', handleOpenOrderTracking);
-      window.removeEventListener('openAuthModal', handleOpenAuthModal);
     };
   }, []);
 
@@ -155,30 +148,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
             {/* Actions */}
             <div className="flex items-center space-x-4">
               {/* User menu */}
-              <div className="relative">
-                {authState.isAuthenticated ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="hidden md:block text-right">
-                      <p className="text-sm font-medium text-gray-800">{authState.user?.name}</p>
-                      <p className="text-xs text-gray-600">{authState.user?.loyaltyPoints} points</p>
-                    </div>
-                    <button
-                      onClick={logout}
-                      className="p-2 text-gray-600 hover:text-green-600 transition-colors"
-                    >
-                      <User className="w-6 h-6" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setIsAuthModalOpen(true)}
-                    className="flex items-center space-x-1 px-4 py-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                  >
-                    <User className="w-5 h-5" />
-                    <span className="hidden md:inline">Sign In</span>
-                  </button>
-                )}
-              </div>
+              {/* User menu removed for Guest Only mode */}
 
               {/* Cart */}
               <button
@@ -274,8 +244,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
       {/* Cart sidebar */}
       <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
-      {/* Auth modal */}
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      {/* Auth modal removed */}
 
       {/* Search results */}
       <SearchResults

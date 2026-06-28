@@ -143,17 +143,10 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
 
               {/* Checkout button */}
               <button
-                onClick={() => {
-                  if (!authState.isAuthenticated && !settings.guestCheckout) {
-                    setIsCheckoutPending(true);
-                    window.dispatchEvent(new CustomEvent('openAuthModal'));
-                    return;
-                  }
-                  setIsCheckoutOpen(true);
-                }}
+                onClick={() => setIsCheckoutOpen(true)}
                 className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
               >
-                {authState.isAuthenticated ? 'Proceed to Checkout' : (settings.guestCheckout ? 'Checkout as Guest' : 'Sign In to Checkout')}
+                Proceed to Checkout
               </button>
 
               {state.total < 25 && (

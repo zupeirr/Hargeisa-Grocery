@@ -9,7 +9,10 @@ export const useSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const socketInstance = io(SOCKET_URL);
+    const socketInstance = io(SOCKET_URL, {
+      transports: ['websocket'],
+      withCredentials: true
+    });
 
     socketInstance.on('connect', () => {
       console.log('Connected to WebSocket server');
