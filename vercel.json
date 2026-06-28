@@ -5,7 +5,11 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api/(.*)",
+      "destination": "https://hargeisa-grocery-1.onrender.com/api/$1"
+    },
+    {
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ],
