@@ -5,16 +5,12 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://hargeisa-grocery-1.onrender.com/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://hargeisa-grocery-1.onrender.com/api/:path*"
     },
     {
       "source": "/:path*",
       "destination": "/index.html"
     }
-  ],
-  "env": {
-    "VITE_API_URL": "@vite_api_url",
-    "VITE_SOCKET_URL": "@vite_socket_url"
-  }
+  ]
 }
