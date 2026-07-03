@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 // Hardcoded for now, in production this should be an environment variable
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://hargeisa-grocery-2.onrender.com';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
