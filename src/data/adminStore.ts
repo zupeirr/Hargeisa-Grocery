@@ -1,6 +1,6 @@
 import { Product, Order, Customer, DashboardStats } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://hargeisa-grocery-2.onrender.com/api';
 
 // Helper to handle API responses
 export async function fetchAPI(endpoint: string, options?: RequestInit) {
