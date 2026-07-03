@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Upload, X, GripVertical, Image as ImageIcon, Star } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://hargeisa-grocery-2.onrender.com/api';
 
 export interface UploadedImage {
   id: string;      // local unique id
