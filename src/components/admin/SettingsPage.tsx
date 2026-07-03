@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Save, Store, Layout, Lock, ShoppingBag, CreditCard, Palette, Settings as SystemIcon, Shield, Upload, Clock, Globe, CheckCircle2, XCircle, Activity, Zap, Lock as LockIcon, Server, Layers } from 'lucide-react';
 import { getSettings, saveSettings, changeAdminPassword } from '../../data/adminStore';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://hargeisa-grocery-2.onrender.com/api';
 
 type Tab = 'store' | 'website' | 'auth' | 'order' | 'payment' | 'appearance' | 'system' | 'security' | 'nfr';
 
@@ -742,7 +742,7 @@ const SettingsPage: React.FC = () => {
                       </div>
                       <span className="text-green-400 font-bold text-lg">88%</span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">29 of 33 requirements met. HTTPS &amp; CSRF require a production environment with SSL.</p>
+                    <p className="text-xs text-gray-500 mt-2">29 of 33 requirements met. HTTPS & CSRF require a production environment with SSL.</p>
                   </div>
 
                 </div>
