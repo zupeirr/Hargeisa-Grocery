@@ -104,6 +104,12 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 const applyFaviconToDOM = (faviconUrl: string) => {
   if (!faviconUrl) return;
   
+  // ✅ FIX: Convert HTTP to HTTPS if needed (mixed content fix)
+  let url = faviconUrl;
+  if (url.startsWith('http://')) {
+    url = url.replace('http://', 'https://');
+  }
+  
   let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
   if (!link) {
     link = document.createElement('link');
@@ -111,9 +117,11 @@ const applyFaviconToDOM = (faviconUrl: string) => {
     document.head.appendChild(link);
   }
   // Cache bust to force update
-  link.href = faviconUrl.includes('?') 
-    ? faviconUrl + '&v=' + Date.now() 
-    : faviconUrl + '?v=' + Date.now();
+  link.href = url.includes('?') 
+    ? url + '&v=' + Date.now() 
+    : url + '?v=' + Date.now();
+  
+  console.log('✅ Favicon applied:', link.href);
 };
 
 // ✅ Update page title
