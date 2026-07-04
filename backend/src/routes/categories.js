@@ -7,14 +7,12 @@ const prisma = new PrismaClient();
 router.get('/', async (req, res) => {
   try {
     const categories = await prisma.category.findMany({
-      include: {
-        _count: { select: { products: true } }
-      },
       orderBy: { createdAt: 'desc' }
     });
     res.json(categories);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching categories' });
+    console.error('Categories error:', error);
+    res.status(500).json({ error: 'Error fetching categories', details: error.message });
   }
 });
 
