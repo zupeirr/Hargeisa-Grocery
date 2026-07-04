@@ -23,7 +23,10 @@ export async function fetchAPI(endpoint: string, options?: RequestInit) {
       }
       throw new Error(`API error: ${errDetails}`);
     }
-    return await res.json();
+    
+    const text = await res.text();
+    const safeText = text.replace(/http:\/\/hargeisa-grocery-2\.onrender\.com/g, 'https://hargeisa-grocery-2.onrender.com');
+    return JSON.parse(safeText);
   } catch (error) {
     console.error(`Network error on ${endpoint}:`, error);
     throw error;

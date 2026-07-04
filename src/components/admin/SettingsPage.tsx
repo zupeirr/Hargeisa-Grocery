@@ -31,7 +31,8 @@ async function uploadFile(file: File): Promise<string> {
   const res = await fetch(`${API_BASE}/upload`, { method: 'POST', body: formData });
   if (!res.ok) throw new Error('Upload failed');
   const data = await res.json();
-  return data.urls[0];
+  const safeUrl = data.urls[0].replace(/http:\/\/hargeisa-grocery-2\.onrender\.com/g, 'https://hargeisa-grocery-2.onrender.com');
+  return safeUrl;
 }
 
 const SettingsPage: React.FC = () => {
