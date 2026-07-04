@@ -52,14 +52,25 @@ app.use((req, _res, next) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://hargeisa-grocery.vercel.app', 'https://hargeisa-grocery.vercel.app'],
+    // ✅ FIX: Remove HTTP for production domain - only HTTPS
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      'https://hargeisa-grocery.vercel.app',
+      'https://hargeisa-grocery-2.onrender.com'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
   }
 });
 
 app.set('io', io);
 
-app.use(cors({ origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://hargeisa-grocery.vercel.app', 'https://hargeisa-grocery.vercel.app'] }));
+app.use(cors({ 
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    'https://hargeisa-grocery.vercel.app',
+    'https://hargeisa-grocery-2.onrender.com'
+  ] 
+}));
 app.use(express.json({ limit: '10mb' })); // limit JSON body size (prevents payload attacks)
 
 // Serve uploaded images as static files
@@ -118,4 +129,3 @@ server.listen(PORT, () => {
   console.log(`🔒 Security: helmet + rate-limiting enabled`);
   console.log(`⚡ Performance: gzip compression enabled`);
 });
-
