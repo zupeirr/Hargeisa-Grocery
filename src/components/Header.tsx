@@ -5,7 +5,7 @@ import { useCart } from '../contexts/CartContext';
 import Cart from './Cart';
 import SearchResults from './SearchResults';
 import OrderTracking from './OrderTracking';
-import { getProducts, getCategories } from '../data/adminStore';
+import { getProducts } from '../data/adminStore';
 import { Product, Order } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
 
@@ -25,18 +25,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const [trackedOrder, setTrackedOrder] = useState<Order | null>(null);
   const { settings } = useSettings();
 
-  const [categories, setCategories] = React.useState<{id: string, name: string}[]>([
-    { id: 'fruits', name: 'Fruits' },
-    { id: 'vegetables', name: 'Vegetables' },
-    { id: 'dairy', name: 'Dairy' },
-    { id: 'meat', name: 'Meat & Poultry' },
-    { id: 'dry-foods', name: 'Dry Foods' },
-    { id: 'beverages', name: 'Beverages' },
-    { id: 'household', name: 'Household' },
-    { id: 'personal-care', name: 'Personal Care' }
-  ]);
-
-  // Fetch products and categories from API
+  // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -46,19 +35,19 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
         console.error('Failed to fetch products:', err);
       }
     };
-    const fetchCategoriesData = async () => {
-      try {
-        const data = await getCategories();
-        if (data && data.length > 0) {
-          setCategories(data.map((c: any) => ({ id: c.name.toLowerCase().replace(/\s+/g, '-'), name: c.name })));
-        }
-      } catch (err) {
-        console.error('Failed to fetch categories:', err);
-      }
-    };
     fetchProducts();
-    fetchCategoriesData();
   }, []);
+
+  const categories = [
+    { id: 'fruits', name: 'Fruits' },
+    { id: 'vegetables', name: 'Vegetables' },
+    { id: 'dairy', name: 'Dairy' },
+    { id: 'meat', name: 'Meat & Poultry' },
+    { id: 'dry-foods', name: 'Dry Foods' },
+    { id: 'beverages', name: 'Beverages' },
+    { id: 'household', name: 'Household' },
+    { id: 'personal-care', name: 'Personal Care' }
+  ];
 
   const totalItems = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
 
