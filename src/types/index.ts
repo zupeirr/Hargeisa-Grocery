@@ -43,7 +43,7 @@ export interface Address {
   isDefault: boolean;
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'out-for-delivery' | 'delivered' | 'cancelled';
+export type OrderStatus = 'confirmed' | 'processing' | 'paid' | 'delivered' | 'cancelled';
 
 export interface Order {
   id: string;

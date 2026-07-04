@@ -58,6 +58,16 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Check stock levels
+    for (const item of items) {
+      const product = existingProducts.find(p => p.id === item.productId);
+      if (product.stockLevel < item.quantity) {
+        return res.status(400).json({
+          error: `Insufficient stock for ${product.name}. Available: ${product.stockLevel}, Requested: ${item.quantity}.`
+        });
+      }
+    }
+
     const year = new Date().getFullYear();
     const prefix = `HG-${year}-`;
     const lastOrder = await prisma.order.findFirst({
@@ -114,9 +124,34 @@ router.post('/', async (req, res) => {
         address: deliveryAddress,
       },
     });
+
+    // Deduct stock and create inventory transactions
+    for (const item of items) {
+      const product = existingProducts.find(p => p.id === item.productId);
+      const newStock = product.stockLevel - item.quantity;
+      
+      await prisma.product.update({
+        where: { id: item.productId },
+        data: {
+          stockLevel: newStock,
+          inStock: newStock > 0
+        }
+      });
+
+      await prisma.inventoryTransaction.create({
+        data: {
+          productId: item.productId,
+          type: 'stock_out',
+          quantity: item.quantity,
+          note: 'Order placed',
+          reference: customId
+        }
+      });
+    }
     
     req.app.get('io').emit('ORDERS_UPDATED');
     req.app.get('io').emit('CUSTOMERS_UPDATED');
+    req.app.get('io').emit('PRODUCTS_UPDATED');
 
     res.status(201).json(order);
   } catch (err) {
@@ -127,11 +162,42 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id/status', async (req, res) => {
   try {
+    const { status } = req.body;
+    const oldOrder = await prisma.order.findUnique({
+      where: { id: req.params.id },
+      include: { items: true }
+    });
+
     const order = await prisma.order.update({
       where: { id: req.params.id },
-      data: { status: req.body.status },
+      data: { status },
       include: { customer: true, items: { include: { product: true } } },
     });
+
+    // If order is cancelled, return items to stock
+    if (status === 'cancelled' && oldOrder && oldOrder.status !== 'cancelled') {
+      for (const item of oldOrder.items) {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            stockLevel: { increment: item.quantity },
+            inStock: true
+          }
+        });
+        
+        await prisma.inventoryTransaction.create({
+          data: {
+            productId: item.productId,
+            type: 'stock_in',
+            quantity: item.quantity,
+            note: 'Order cancelled',
+            reference: order.id
+          }
+        });
+      }
+      req.app.get('io').emit('PRODUCTS_UPDATED');
+    }
+
     req.app.get('io').emit('ORDERS_UPDATED');
     res.json(order);
   } catch (err) {

@@ -85,7 +85,7 @@ const OrdersPage: React.FC = () => {
               <div style="text-align: right;">
                 <h4 style="margin: 0 0 8px 0; color: #555;">Payment Details:</h4>
                 <p style="margin: 0; text-transform: uppercase; font-weight: 500;">Method: ${order.paymentMethod}</p>
-                <p style="margin: 4px 0 0 0; color: #666;">Status: ${order.status === 'delivered' ? 'Paid' : 'Pending'}</p>
+                <p style="margin: 4px 0 0 0; color: #666;">Status: <span style="text-transform: capitalize;">${order.status}</span></p>
               </div>
             </div>
 
@@ -159,11 +159,12 @@ const OrdersPage: React.FC = () => {
 
   const getStatusColor = (status: OrderStatus) => {
     switch(status) {
+      case 'confirmed': return 'bg-yellow-500/10 text-yellow-500';
+      case 'processing': return 'bg-purple-500/10 text-purple-500';
+      case 'paid': return 'bg-blue-500/10 text-blue-500';
       case 'delivered': return 'bg-green-500/10 text-green-500';
-      case 'pending': return 'bg-yellow-500/10 text-yellow-500';
       case 'cancelled': return 'bg-red-500/10 text-red-500';
-      case 'confirmed': return 'bg-blue-500/10 text-blue-500';
-      default: return 'bg-orange-500/10 text-orange-500';
+      default: return 'bg-gray-500/10 text-gray-500';
     }
   };
 
@@ -193,10 +194,9 @@ const OrdersPage: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none appearance-none cursor-pointer"
             >
               <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
-              <option value="preparing">Preparing</option>
-              <option value="out-for-delivery">Out for Delivery</option>
+              <option value="processing">Processing</option>
+              <option value="paid">Paid</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
             </select>
@@ -232,10 +232,9 @@ const OrdersPage: React.FC = () => {
                       onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
                       className={`px-2 py-1 text-xs font-medium rounded-full outline-none cursor-pointer border-none ${getStatusColor(order.status)}`}
                     >
-                      <option value="pending" className="bg-gray-800 text-white">Pending</option>
                       <option value="confirmed" className="bg-gray-800 text-white">Confirmed</option>
-                      <option value="preparing" className="bg-gray-800 text-white">Preparing</option>
-                      <option value="out-for-delivery" className="bg-gray-800 text-white">Out for Delivery</option>
+                      <option value="processing" className="bg-gray-800 text-white">Processing</option>
+                      <option value="paid" className="bg-gray-800 text-white">Paid</option>
                       <option value="delivered" className="bg-gray-800 text-white">Delivered</option>
                       <option value="cancelled" className="bg-gray-800 text-white">Cancelled</option>
                     </select>
@@ -313,16 +312,15 @@ const OrdersPage: React.FC = () => {
                       style={{ 
                         width: `${
                           selectedOrder.status === 'delivered' ? 100 :
-                          selectedOrder.status === 'out-for-delivery' ? 75 :
-                          selectedOrder.status === 'preparing' ? 50 :
-                          selectedOrder.status === 'confirmed' ? 25 : 0
+                          selectedOrder.status === 'paid' ? 66 :
+                          selectedOrder.status === 'processing' ? 33 : 0
                         }%` 
                       }}
                     ></div>
                     
                     {/* Steps */}
-                    {['pending', 'confirmed', 'preparing', 'out-for-delivery', 'delivered'].map((step, idx) => {
-                      const statusList = ['pending', 'confirmed', 'preparing', 'out-for-delivery', 'delivered'];
+                    {['confirmed', 'processing', 'paid', 'delivered'].map((step, idx) => {
+                      const statusList = ['confirmed', 'processing', 'paid', 'delivered'];
                       const stepIndex = statusList.indexOf(selectedOrder.status);
                       const isCompleted = idx <= stepIndex;
                       const isActive = idx === stepIndex;

@@ -283,8 +283,9 @@ const CustomersPage: React.FC = () => {
                               <span className="text-sm font-bold text-white">${order.total.toFixed(2)}</span>
                               <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full capitalize ${
                                 order.status === 'delivered' ? 'bg-green-500/10 text-green-500' :
-                                order.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                order.status === 'cancelled' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'
+                                order.status === 'paid' ? 'bg-blue-500/10 text-blue-500' :
+                                order.status === 'processing' ? 'bg-purple-500/10 text-purple-500' :
+                                order.status === 'cancelled' ? 'bg-red-500/10 text-red-500' : 'bg-yellow-500/10 text-yellow-500'
                               }`}>
                                 {order.status}
                               </span>

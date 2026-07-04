@@ -83,7 +83,7 @@ model Order {
   id              String      @id @default(uuid())
   customerId      String
   customer        Customer    @relation(fields: [customerId], references: [id])
-  status          String      @default("pending") // pending, confirmed, preparing, out-for-delivery, delivered, cancelled
+  status          String      @default("confirmed") // confirmed, processing, paid, delivered, cancelled
   total           Float
   orderDate       DateTime    @default(now())
   paymentMethod   String

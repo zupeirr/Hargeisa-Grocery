@@ -59,11 +59,11 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ isOpen, onClose, initialO
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <CheckCircle className="w-6 h-6 text-green-600" />;
-      case 'preparing':
-        return <Package className="w-6 h-6 text-blue-600" />;
-      case 'out-for-delivery':
-        return <Truck className="w-6 h-6 text-orange-600" />;
+        return <CheckCircle className="w-6 h-6 text-yellow-600" />;
+      case 'processing':
+        return <Package className="w-6 h-6 text-purple-600" />;
+      case 'paid':
+        return <CheckCircle className="w-6 h-6 text-blue-600" />;
       case 'delivered':
         return <CheckCircle className="w-6 h-6 text-green-600" />;
       default:
@@ -73,14 +73,12 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ isOpen, onClose, initialO
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'Order Received';
       case 'confirmed':
         return 'Order Confirmed';
-      case 'preparing':
-        return 'Preparing Order';
-      case 'out-for-delivery':
-        return 'Out for Delivery';
+      case 'processing':
+        return 'Processing';
+      case 'paid':
+        return 'Paid';
       case 'delivered':
         return 'Delivered';
       default:

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getProducts, saveProduct, deleteProduct } from '../../data/adminStore';
+import { getProducts, saveProduct, deleteProduct, getCategories } from '../../data/adminStore';
 import { Product } from '../../types';
 import { Plus, Search, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import ImageUploader, { UploadedImage } from './ImageUploader';
@@ -34,6 +34,16 @@ const ProductsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productImages, setProductImages] = useState<UploadedImage[]>([]);
+  const [categories, setCategories] = useState<{id: string, name: string}[]>([
+    { id: 'fruits', name: 'Fruits' },
+    { id: 'vegetables', name: 'Vegetables' },
+    { id: 'dairy', name: 'Dairy' },
+    { id: 'meat', name: 'Meat & Poultry' },
+    { id: 'dry-foods', name: 'Dry Foods' },
+    { id: 'beverages', name: 'Beverages' },
+    { id: 'household', name: 'Household Items' },
+    { id: 'personal-care', name: 'Personal Care' }
+  ]);
 
   const fetchProducts = async () => {
     try {
@@ -46,6 +56,17 @@ const ProductsPage: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
+    const fetchCats = async () => {
+      try {
+        const data = await getCategories();
+        if (data && data.length > 0) {
+          setCategories(data.map((c: any) => ({ id: c.name.toLowerCase().replace(/\s+/g, '-'), name: c.name })));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchCats();
   }, []);
 
   const openModal = (product: Product | null) => {
@@ -290,17 +311,12 @@ const ProductsPage: React.FC = () => {
                   <label className="text-sm font-medium text-gray-300">Category</label>
                   <select
                     name="category"
-                    defaultValue={editingProduct?.category || 'fruits'}
+                    defaultValue={editingProduct?.category || (categories[0]?.id || 'fruits')}
                     className="w-full px-4 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                   >
-                    <option value="fruits">Fruits</option>
-                    <option value="vegetables">Vegetables</option>
-                    <option value="dairy">Dairy</option>
-                    <option value="meat">Meat &amp; Poultry</option>
-                    <option value="dry-foods">Dry Foods</option>
-                    <option value="beverages">Beverages</option>
-                    <option value="household">Household Items</option>
-                    <option value="personal-care">Personal Care</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
                   </select>
                 </div>
 

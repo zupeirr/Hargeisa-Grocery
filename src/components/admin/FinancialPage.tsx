@@ -488,8 +488,8 @@ export default function FinancialPage() {
               <div className="space-y-3">
                 {d.byStatus.map((s: any) => {
                   const colors: Record<string, string> = {
-                    delivered: '#22c55e', cancelled: '#ef4444', pending: '#eab308',
-                    confirmed: '#3b82f6', preparing: '#8b5cf6', 'out-for-delivery': '#06b6d4',
+                    delivered: '#22c55e', cancelled: '#ef4444', confirmed: '#eab308',
+                    processing: '#a855f7', paid: '#3b82f6'
                   };
                   const total = d.byStatus.reduce((sum: number, x: any) => sum + x.count, 0);
                   return (
