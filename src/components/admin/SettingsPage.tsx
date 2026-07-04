@@ -525,21 +525,176 @@ const SettingsPage: React.FC = () => {
 
                   {/* ── Appearance Settings ──────────────────────────────────────── */}
                   {activeTab === 'appearance' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className={labelCls}>Primary Theme Color</label>
-                        <div className="flex gap-2">
-                          <input type="color" name="themeColor" value={settings.themeColor} onChange={handleChange} className="h-10 w-10 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" name="themeColor" value={settings.themeColor} onChange={handleChange} className={`${inputCls} flex-1`} />
+                    <div className="space-y-8">
+
+                      {/* Color Presets */}
+                      <div>
+                        <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
+                          <Palette size={16} className="text-green-400" /> Color Presets
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-4">Click a preset to instantly apply it</p>
+                        <div className="flex flex-wrap gap-3">
+                          {[
+                            { label: 'Emerald', primary: '#10b981', secondary: '#1f2937' },
+                            { label: 'Green', primary: '#16a34a', secondary: '#1f2937' },
+                            { label: 'Blue', primary: '#3b82f6', secondary: '#1e3a5f' },
+                            { label: 'Indigo', primary: '#6366f1', secondary: '#1e1b4b' },
+                            { label: 'Purple', primary: '#a855f7', secondary: '#2e1065' },
+                            { label: 'Rose', primary: '#f43f5e', secondary: '#1f2937' },
+                            { label: 'Orange', primary: '#f97316', secondary: '#1f2937' },
+                            { label: 'Cyan', primary: '#06b6d4', secondary: '#0c4a6e' },
+                          ].map((preset) => (
+                            <button
+                              key={preset.label}
+                              type="button"
+                              title={preset.label}
+                              onClick={() => {
+                                setSettings(prev => ({ ...prev, themeColor: preset.primary, secondaryColor: preset.secondary }));
+                                // Apply immediately
+                                document.documentElement.style.setProperty('--color-primary', preset.primary);
+                                document.documentElement.style.setProperty('--color-secondary', preset.secondary);
+                              }}
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-700 hover:border-gray-500 transition-all hover:scale-105"
+                            >
+                              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.primary }} />
+                              <span className="text-xs text-gray-300">{preset.label}</span>
+                            </button>
+                          ))}
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <label className={labelCls}>Secondary Color</label>
-                        <div className="flex gap-2">
-                          <input type="color" name="secondaryColor" value={settings.secondaryColor} onChange={handleChange} className="h-10 w-10 rounded cursor-pointer border-0 p-0" />
-                          <input type="text" name="secondaryColor" value={settings.secondaryColor} onChange={handleChange} className={`${inputCls} flex-1`} />
+
+                      {/* Custom Colors */}
+                      <div>
+                        <h3 className="text-base font-semibold text-white mb-4">Custom Colors</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className={labelCls}>Primary / Accent Color</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="color"
+                                name="themeColor"
+                                value={settings.themeColor}
+                                onChange={(e) => {
+                                  handleChange(e);
+                                  document.documentElement.style.setProperty('--color-primary', e.target.value);
+                                }}
+                                className="h-10 w-10 rounded cursor-pointer border-0 p-0 bg-transparent"
+                              />
+                              <input
+                                type="text"
+                                name="themeColor"
+                                value={settings.themeColor}
+                                onChange={(e) => {
+                                  handleChange(e);
+                                  if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                                    document.documentElement.style.setProperty('--color-primary', e.target.value);
+                                  }
+                                }}
+                                className={`${inputCls} flex-1 font-mono`}
+                                placeholder="#16a34a"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500">Used for buttons, active nav, highlights</p>
+                          </div>
+                          <div className="space-y-2">
+                            <label className={labelCls}>Secondary / Background Color</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="color"
+                                name="secondaryColor"
+                                value={settings.secondaryColor}
+                                onChange={(e) => {
+                                  handleChange(e);
+                                  document.documentElement.style.setProperty('--color-secondary', e.target.value);
+                                }}
+                                className="h-10 w-10 rounded cursor-pointer border-0 p-0 bg-transparent"
+                              />
+                              <input
+                                type="text"
+                                name="secondaryColor"
+                                value={settings.secondaryColor}
+                                onChange={(e) => {
+                                  handleChange(e);
+                                  if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                                    document.documentElement.style.setProperty('--color-secondary', e.target.value);
+                                  }
+                                }}
+                                className={`${inputCls} flex-1 font-mono`}
+                                placeholder="#1f2937"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500">Used for sidebars, cards, dark backgrounds</p>
+                          </div>
                         </div>
                       </div>
+
+                      {/* Live Preview */}
+                      <div>
+                        <h3 className="text-base font-semibold text-white mb-4">Live Preview</h3>
+                        <div className="rounded-xl border border-gray-700 overflow-hidden">
+                          {/* Mock nav */}
+                          <div className="flex items-center gap-3 px-5 py-3" style={{ backgroundColor: settings.secondaryColor }}>
+                            <div className="w-6 h-6 rounded-full" style={{ backgroundColor: settings.themeColor }} />
+                            <span className="text-white text-sm font-semibold">Hargeisa Grocery</span>
+                            <div className="ml-auto flex gap-3">
+                              {['Home', 'Products', 'Orders'].map(n => (
+                                <span key={n} className="text-xs text-gray-400 cursor-pointer hover:text-white">{n}</span>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Mock content */}
+                          <div className="p-5 bg-gray-950 space-y-3">
+                            <div className="flex gap-3">
+                              <button
+                                type="button"
+                                className="px-4 py-2 text-white text-sm rounded-lg font-medium"
+                                style={{ backgroundColor: settings.themeColor }}
+                              >
+                                Add to Cart
+                              </button>
+                              <button
+                                type="button"
+                                className="px-4 py-2 text-white text-sm rounded-lg font-medium border"
+                                style={{ borderColor: settings.themeColor, color: settings.themeColor }}
+                              >
+                                View Details
+                              </button>
+                            </div>
+                            <div className="flex gap-2">
+                              <div className="h-2 rounded-full flex-1" style={{ backgroundColor: settings.themeColor, opacity: 0.7 }} />
+                              <div className="h-2 rounded-full bg-gray-700 flex-1" />
+                              <div className="h-2 rounded-full bg-gray-700 flex-1" />
+                            </div>
+                            <p className="text-xs text-gray-500">↑ This is a live preview of your chosen colors</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Dark / Light Mode */}
+                      <div>
+                        <h3 className="text-base font-semibold text-white mb-4">Dashboard Mode</h3>
+                        <div className="flex gap-4">
+                          {[
+                            { label: '🌙 Dark Mode', value: true },
+                            { label: '☀️ Light Mode', value: false },
+                          ].map((mode) => (
+                            <button
+                              key={String(mode.value)}
+                              type="button"
+                              onClick={() => setSettings(prev => ({ ...prev, adminDarkMode: mode.value }))}
+                              className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-all ${
+                                settings.adminDarkMode === mode.value
+                                  ? 'border-green-500 text-white bg-green-500/10'
+                                  : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                              }`}
+                            >
+                              {mode.label}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Dark mode is the default admin experience. Light mode is experimental.</p>
+                      </div>
+
                     </div>
                   )}
 

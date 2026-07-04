@@ -181,6 +181,30 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [settings.favicon, settings.websiteName]);
 
+  // ✅ Apply theme colors as CSS variables
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.themeColor) {
+      root.style.setProperty('--color-primary', settings.themeColor);
+      // Generate lighter/darker shades for hover states
+      root.style.setProperty('--color-primary-hover', settings.themeColor + 'cc');
+    }
+    if (settings.secondaryColor) {
+      root.style.setProperty('--color-secondary', settings.secondaryColor);
+    }
+  }, [settings.themeColor, settings.secondaryColor]);
+
+  // ✅ Apply dark/light mode
+  useEffect(() => {
+    if (settings.adminDarkMode) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    }
+  }, [settings.adminDarkMode]);
+
   useEffect(() => {
     if (socket) {
       socket.on('SETTINGS_UPDATED', fetchSettings);
