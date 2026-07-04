@@ -3,8 +3,10 @@ import { getSettings } from '../data/adminStore';
 import { useSocket } from '../hooks/useSocket';
 
 export interface StoreSettings {
+  websiteName: string;
   storeName: string;
   storeLogo: string;
+  favicon: string;
   storeDescription: string;
   contactEmail: string;
   contactPhone: string;
@@ -46,8 +48,10 @@ export interface StoreSettings {
 }
 
 const defaultSettings: StoreSettings = {
+  websiteName: 'Hargeisa Grocery',
   storeName: 'Hargeisa Grocery',
   storeLogo: '',
+  favicon: '/favicon.png',
   storeDescription: 'Your premium source for fresh groceries delivered straight to your door in Hargeisa.',
   contactEmail: 'hello@hargeisa.com',
   contactPhone: '+252 63 609 7266',
@@ -96,6 +100,29 @@ interface SettingsContextType {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
+// ✅ Apply favicon to DOM
+const applyFaviconToDOM = (faviconUrl: string) => {
+  if (!faviconUrl) return;
+  
+  let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  // Cache bust to force update
+  link.href = faviconUrl.includes('?') 
+    ? faviconUrl + '&v=' + Date.now() 
+    : faviconUrl + '?v=' + Date.now();
+};
+
+// ✅ Update page title
+const updatePageTitle = (websiteName: string) => {
+  if (websiteName) {
+    document.title = websiteName + ' - Web App';
+  }
+};
+
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<StoreSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
@@ -135,6 +162,16 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  // ✅ Apply favicon & title whenever settings change
+  useEffect(() => {
+    if (settings.favicon) {
+      applyFaviconToDOM(settings.favicon);
+    }
+    if (settings.websiteName) {
+      updatePageTitle(settings.websiteName);
+    }
+  }, [settings.favicon, settings.websiteName]);
 
   useEffect(() => {
     if (socket) {
