@@ -3,7 +3,15 @@ import { getProducts, saveProduct, deleteProduct } from '../../data/adminStore';
 import { Product } from '../../types';
 import { Plus, Search, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import ImageUploader, { UploadedImage } from './ImageUploader';
-import { normalizeImageUrl } from '../../utils/imageUrl';
+
+// ✅ Convert HTTP to HTTPS (fixes mixed content warnings)
+const normalizeImageUrl = (url: string | undefined | null): string => {
+  if (!url) return '';
+  if (url.startsWith('http://')) {
+    return url.replace('http://', 'https://');
+  }
+  return url;
+};
 
 // Convert stored JSON images string to UploadedImage[]
 function parseImages(raw: string | undefined | null): UploadedImage[] {
