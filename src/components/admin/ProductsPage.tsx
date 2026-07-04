@@ -18,10 +18,10 @@ function parseImages(raw: string | undefined | null): UploadedImage[] {
   if (!raw) return [];
   try {
     const arr: string[] = JSON.parse(raw);
-    return arr.map((url, i) => ({ 
-      id: `existing-${i}-${url}`, 
+    return arr.map((url, i) => ({
+      id: `existing-${i}-${url}`,
       url: normalizeImageUrl(url), // ✅ Normalize URL
-      preview: normalizeImageUrl(url) 
+      preview: normalizeImageUrl(url)
     }));
   } catch {
     return [];
@@ -34,7 +34,7 @@ const ProductsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productImages, setProductImages] = useState<UploadedImage[]>([]);
-  const [categories, setCategories] = useState<{id: string, name: string}[]>([
+  const [categories, setCategories] = useState<{ id: string, name: string }[]>([
     { id: 'fruits', name: 'Fruits' },
     { id: 'vegetables', name: 'Vegetables' },
     { id: 'dairy', name: 'Dairy' },
@@ -75,10 +75,10 @@ const ProductsPage: React.FC = () => {
       // Load existing images; fall back to single image field
       const imgs = parseImages((product as any).images);
       if (imgs.length === 0 && product.image) {
-        setProductImages([{ 
-          id: 'legacy-0', 
+        setProductImages([{
+          id: 'legacy-0',
           url: normalizeImageUrl(product.image), // ✅ Normalize URL
-          preview: normalizeImageUrl(product.image) 
+          preview: normalizeImageUrl(product.image)
         }]);
       } else {
         setProductImages(imgs);
@@ -230,9 +230,8 @@ const ProductsPage: React.FC = () => {
                     <td className="px-6 py-4 font-medium text-white">${product.price.toFixed(2)}</td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.inStock ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
-                        }`}
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${product.inStock ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                          }`}
                       >
                         {product.inStock ? 'In Stock' : 'Out of Stock'}
                       </span>
