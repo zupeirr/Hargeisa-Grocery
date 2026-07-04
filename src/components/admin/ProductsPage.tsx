@@ -3,13 +3,18 @@ import { getProducts, saveProduct, deleteProduct } from '../../data/adminStore';
 import { Product } from '../../types';
 import { Plus, Search, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import ImageUploader, { UploadedImage } from './ImageUploader';
+import { normalizeImageUrl } from '../../utils/imageUrl';
 
 // Convert stored JSON images string to UploadedImage[]
 function parseImages(raw: string | undefined | null): UploadedImage[] {
   if (!raw) return [];
   try {
     const arr: string[] = JSON.parse(raw);
-    return arr.map((url, i) => ({ id: `existing-${i}-${url}`, url, preview: url }));
+    return arr.map((url, i) => ({ 
+      id: `existing-${i}-${url}`, 
+      url: normalizeImageUrl(url), // ✅ Normalize URL
+      preview: normalizeImageUrl(url) 
+    }));
   } catch {
     return [];
   }
@@ -41,7 +46,11 @@ const ProductsPage: React.FC = () => {
       // Load existing images; fall back to single image field
       const imgs = parseImages((product as any).images);
       if (imgs.length === 0 && product.image) {
-        setProductImages([{ id: 'legacy-0', url: product.image, preview: product.image }]);
+        setProductImages([{ 
+          id: 'legacy-0', 
+          url: normalizeImageUrl(product.image), // ✅ Normalize URL
+          preview: normalizeImageUrl(product.image) 
+        }]);
       } else {
         setProductImages(imgs);
       }
@@ -146,7 +155,7 @@ const ProductsPage: React.FC = () => {
             <tbody className="divide-y divide-gray-800">
               {filteredProducts.map((product) => {
                 const extraImages = parseImages((product as any).images);
-                const displayImage = extraImages[0]?.url || product.image;
+                const displayImage = extraImages[0]?.url || normalizeImageUrl(product.image); // ✅ Normalize URL
                 const imageCount = extraImages.length || (product.image ? 1 : 0);
                 return (
                   <tr key={product.id} className="hover:bg-gray-800/50 transition-colors">
