@@ -43,7 +43,14 @@ router.post('/', upload.array('images', 10), (req, res) => {
     return res.status(400).json({ error: 'No files uploaded' });
   }
 
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  // ✅ FIX: Always use HTTPS in production (req.protocol can be HTTP behind proxy)
+  let baseUrl;
+  if (process.env.NODE_ENV === 'production') {
+    baseUrl = process.env.API_BASE_URL || 'https://hargeisa-grocery-2.onrender.com';
+  } else {
+    baseUrl = `${req.protocol}://${req.get('host')}`;
+  }
+  
   const urls = req.files.map((f) => `${baseUrl}/uploads/${f.filename}`);
   res.json({ urls });
 });
