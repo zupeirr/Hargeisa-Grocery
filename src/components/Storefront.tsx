@@ -3,7 +3,7 @@ import Header from './Header';
 import Hero from './Hero';
 import ProductCard from './ProductCard';
 import Footer from './Footer';
-import { getProducts, getCategories } from '../data/adminStore';
+import { getProducts } from '../data/adminStore';
 import { Product } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSocket } from '../hooks/useSocket';
@@ -11,7 +11,6 @@ import { useSocket } from '../hooks/useSocket';
 const Storefront: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [products, setProducts] = useState<Product[]>([]);
-  const [categoriesData, setCategoriesData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { settings, isLoading: isSettingsLoading } = useSettings();
   const { socket } = useSocket();
@@ -29,17 +28,6 @@ const Storefront: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
-    const fetchCats = async () => {
-      try {
-        const data = await getCategories();
-        if (data && data.length > 0) {
-          setCategoriesData(data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch categories:', err);
-      }
-    };
-    fetchCats();
   }, []);
 
   useEffect(() => {
@@ -57,26 +45,15 @@ const Storefront: React.FC = () => {
 
   const categoryNames: { [key: string]: string } = {
     'all': 'All Products',
-    ...categoriesData.reduce((acc: any, c: any) => {
-      acc[c.name.toLowerCase().replace(/\s+/g, '-')] = c.name;
-      return acc;
-    }, {})
+    'fruits': 'Fresh Fruits',
+    'vegetables': 'Fresh Vegetables',
+    'dairy': 'Dairy Products',
+    'meat': 'Meat & Poultry',
+    'dry-foods': 'Dry Foods',
+    'beverages': 'Beverages',
+    'household': 'Household Items',
+    'personal-care': 'Personal Care'
   };
-  
-  // Fallback if categories are not loaded yet but we have products with these categories
-  if (Object.keys(categoryNames).length === 1) {
-    const hardcoded = {
-      'fruits': 'Fresh Fruits',
-      'vegetables': 'Fresh Vegetables',
-      'dairy': 'Dairy Products',
-      'meat': 'Meat & Poultry',
-      'dry-foods': 'Dry Foods',
-      'beverages': 'Beverages',
-      'household': 'Household Items',
-      'personal-care': 'Personal Care'
-    };
-    Object.assign(categoryNames, hardcoded);
-  }
 
   if (isSettingsLoading) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
