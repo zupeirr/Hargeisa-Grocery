@@ -45,7 +45,12 @@ router.post('/', upload.array('images', 10), (req, res) => {
 
   let baseUrl = process.env.API_BASE_URL;
   if (!baseUrl) {
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    let protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    if (typeof protocol === 'string' && protocol.includes('https')) {
+      protocol = 'https';
+    } else if (req.get('host') && req.get('host').includes('onrender.com')) {
+      protocol = 'https';
+    }
     baseUrl = `${protocol}://${req.get('host')}`;
   }
   
