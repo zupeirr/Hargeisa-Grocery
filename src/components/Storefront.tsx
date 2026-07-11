@@ -3,7 +3,7 @@ import Header from './Header';
 import Hero from './Hero';
 import ProductCard from './ProductCard';
 import Footer from './Footer';
-import { getProducts } from '../data/adminStore';
+import { getProducts, getCategories } from '../data/adminStore';
 import { Product } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
 import { useSocket } from '../hooks/useSocket';
@@ -11,30 +11,68 @@ import { useSocket } from '../hooks/useSocket';
 const Storefront: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [products, setProducts] = useState<Product[]>([]);
+  const DEFAULT_CATEGORIES = [
+    { id: 'fruits', name: 'Fresh Fruits' },
+    { id: 'vegetables', name: 'Fresh Vegetables' },
+    { id: 'dairy', name: 'Dairy Products' },
+    { id: 'meat', name: 'Meat & Poultry' },
+    { id: 'dry-foods', name: 'Dry Foods' },
+    { id: 'beverages', name: 'Beverages' },
+    { id: 'household', name: 'Household Items' },
+    { id: 'personal-care', name: 'Personal Care' }
+  ];
+  const [categories, setCategories] = useState<{id: string, name: string}[]>(DEFAULT_CATEGORIES);
   const [isLoading, setIsLoading] = useState(true);
   const { settings, isLoading: isSettingsLoading } = useSettings();
   const { socket } = useSocket();
 
-  const fetchProducts = async () => {
+  useEffect(() => {
+    let isMounted = true;
+    const fetchData = async () => {
+      try {
+        const [prodData, catData] = await Promise.all([getProducts(), getCategories()]);
+        if (isMounted) {
+          setProducts(prodData);
+          if (catData && catData.length > 0) {
+            setCategories(prev => {
+              const fetched = catData.map((c: any) => ({ 
+                id: c.name.toLowerCase().replace(/\s+/g, '-'), 
+                name: c.name 
+              }));
+              const merged = [...prev];
+              fetched.forEach((fc: any) => {
+                if (!merged.find(c => c.id === fc.id)) {
+                  merged.push(fc);
+                }
+              });
+              return merged;
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    fetchData();
+    return () => { isMounted = false; };
+  }, []);
+
+  const fetchProductsOnly = async () => {
     try {
       const data = await getProducts();
       setProducts(data);
     } catch (err) {
       console.error('Failed to fetch products:', err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  useEffect(() => {
     if (socket) {
-      socket.on('PRODUCTS_UPDATED', fetchProducts);
+      socket.on('PRODUCTS_UPDATED', fetchProductsOnly);
       return () => {
-        socket.off('PRODUCTS_UPDATED', fetchProducts);
+        socket.off('PRODUCTS_UPDATED', fetchProductsOnly);
       };
     }
   }, [socket]);
@@ -43,17 +81,9 @@ const Storefront: React.FC = () => {
     ? products
     : products.filter(product => product.category === selectedCategory);
 
-  const categoryNames: { [key: string]: string } = {
-    'all': 'All Products',
-    'fruits': 'Fresh Fruits',
-    'vegetables': 'Fresh Vegetables',
-    'dairy': 'Dairy Products',
-    'meat': 'Meat & Poultry',
-    'dry-foods': 'Dry Foods',
-    'beverages': 'Beverages',
-    'household': 'Household Items',
-    'personal-care': 'Personal Care'
-  };
+  const currentCategoryName = selectedCategory === 'all' 
+    ? 'All Products' 
+    : categories.find(c => c.id === selectedCategory)?.name || 'Products';
 
   if (isSettingsLoading) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
@@ -84,12 +114,12 @@ const Storefront: React.FC = () => {
       <div id="products" className="max-w-7xl mx-auto px-4 py-12">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-2">
-            {categoryNames[selectedCategory]}
+            {currentCategoryName}
           </h2>
           <p className="text-gray-600">
             {selectedCategory === 'all'
               ? `Discover our full range of ${products.length} quality products`
-              : `Fresh ${categoryNames[selectedCategory].toLowerCase()} sourced from trusted suppliers`
+              : `Fresh ${currentCategoryName.toLowerCase()} sourced from trusted suppliers`
             }
           </p>
         </div>

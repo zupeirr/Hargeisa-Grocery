@@ -4,37 +4,19 @@ import { Product } from '../../types';
 import { Plus, Search, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import ImageUploader, { UploadedImage } from './ImageUploader';
 
-// ✅ Convert HTTP to HTTPS (fixes mixed content warnings)
-const normalizeImageUrl = (url: string | undefined | null): string => {
-  if (!url) return '';
-  if (url.startsWith('http://')) {
-    return url.replace('http://', 'https://');
-  }
-  return url;
-};
-
 // Convert stored JSON images string to UploadedImage[]
 function parseImages(raw: string | undefined | null): UploadedImage[] {
   if (!raw) return [];
   try {
     const arr: string[] = JSON.parse(raw);
-    return arr.map((url, i) => ({
-      id: `existing-${i}-${url}`,
-      url: normalizeImageUrl(url), // ✅ Normalize URL
-      preview: normalizeImageUrl(url)
-    }));
+    return arr.map((url, i) => ({ id: `existing-${i}-${url}`, url, preview: url }));
   } catch {
     return [];
   }
 }
 
 const ProductsPage: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productImages, setProductImages] = useState<UploadedImage[]>([]);
-  const [categories, setCategories] = useState<{ id: string, name: string }[]>([
+  const DEFAULT_CATEGORIES = [
     { id: 'fruits', name: 'Fruits' },
     { id: 'vegetables', name: 'Vegetables' },
     { id: 'dairy', name: 'Dairy' },
@@ -43,7 +25,13 @@ const ProductsPage: React.FC = () => {
     { id: 'beverages', name: 'Beverages' },
     { id: 'household', name: 'Household Items' },
     { id: 'personal-care', name: 'Personal Care' }
-  ]);
+  ];
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<{id: string, name: string}[]>(DEFAULT_CATEGORIES);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productImages, setProductImages] = useState<UploadedImage[]>([]);
 
   const fetchProducts = async () => {
     try {
@@ -54,19 +42,29 @@ const ProductsPage: React.FC = () => {
     }
   };
 
+  const fetchCategoriesData = async () => {
+    try {
+      const data = await getCategories();
+      if (data && data.length > 0) {
+        setCategories(prev => {
+          const fetched = data.map((c: any) => ({ id: c.name.toLowerCase().replace(/\s+/g, '-'), name: c.name }));
+          const merged = [...prev];
+          fetched.forEach((fc: any) => {
+            if (!merged.find(c => c.id === fc.id)) {
+              merged.push(fc);
+            }
+          });
+          return merged;
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
-    const fetchCats = async () => {
-      try {
-        const data = await getCategories();
-        if (data && data.length > 0) {
-          setCategories(data.map((c: any) => ({ id: c.name.toLowerCase().replace(/\s+/g, '-'), name: c.name })));
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchCats();
+    fetchCategoriesData();
   }, []);
 
   const openModal = (product: Product | null) => {
@@ -75,11 +73,7 @@ const ProductsPage: React.FC = () => {
       // Load existing images; fall back to single image field
       const imgs = parseImages((product as any).images);
       if (imgs.length === 0 && product.image) {
-        setProductImages([{
-          id: 'legacy-0',
-          url: normalizeImageUrl(product.image), // ✅ Normalize URL
-          preview: normalizeImageUrl(product.image)
-        }]);
+        setProductImages([{ id: 'legacy-0', url: product.image, preview: product.image }]);
       } else {
         setProductImages(imgs);
       }
@@ -184,7 +178,7 @@ const ProductsPage: React.FC = () => {
             <tbody className="divide-y divide-gray-800">
               {filteredProducts.map((product) => {
                 const extraImages = parseImages((product as any).images);
-                const displayImage = extraImages[0]?.url || normalizeImageUrl(product.image); // ✅ Normalize URL
+                const displayImage = extraImages[0]?.url || product.image;
                 const imageCount = extraImages.length || (product.image ? 1 : 0);
                 return (
                   <tr key={product.id} className="hover:bg-gray-800/50 transition-colors">
@@ -230,8 +224,9 @@ const ProductsPage: React.FC = () => {
                     <td className="px-6 py-4 font-medium text-white">${product.price.toFixed(2)}</td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${product.inStock ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
-                          }`}
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          product.inStock ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                        }`}
                       >
                         {product.inStock ? 'In Stock' : 'Out of Stock'}
                       </span>
@@ -310,11 +305,11 @@ const ProductsPage: React.FC = () => {
                   <label className="text-sm font-medium text-gray-300">Category</label>
                   <select
                     name="category"
-                    defaultValue={editingProduct?.category || (categories[0]?.id || 'fruits')}
+                    defaultValue={editingProduct?.category || 'fruits'}
                     className="w-full px-4 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                   >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
                 </div>

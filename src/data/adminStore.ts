@@ -1,6 +1,6 @@
 import { Product, Order, Customer, DashboardStats } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://hargeisa-grocery-2.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 // Helper to handle API responses
 export async function fetchAPI(endpoint: string, options?: RequestInit) {
@@ -25,8 +25,7 @@ export async function fetchAPI(endpoint: string, options?: RequestInit) {
     }
     
     const text = await res.text();
-    const safeText = text.replace(/http:\/\/hargeisa-grocery-2\.onrender\.com/g, 'https://hargeisa-grocery-2.onrender.com');
-    return JSON.parse(safeText);
+    return JSON.parse(text);
   } catch (error) {
     console.error(`Network error on ${endpoint}:`, error);
     throw error;
