@@ -8,6 +8,17 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL is missing. Backend may fail to connect to the database.');
+}
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️ JWT_SECRET is missing. Using a default secret for development ONLY.');
+  if (process.env.NODE_ENV === 'production') {
+    console.error('❌ JWT_SECRET is required in production!');
+    process.exit(1);
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -125,7 +136,11 @@ app.use((req, res) => {
 // Global error handler
 app.use((err, req, res, _next) => {
   console.error(`[ERROR] ${err.message}`);
-  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+  const errorResponse = { error: err.message || 'Internal server error' };
+  if (process.env.NODE_ENV === 'development') {
+    errorResponse.stack = err.stack;
+  }
+  res.status(err.status || 500).json(errorResponse);
 });
 
 io.on('connection', (socket) => {
