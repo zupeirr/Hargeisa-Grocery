@@ -47,9 +47,11 @@ router.post('/', async (req, res) => {
 
     // Also update order status if necessary
     if (status) {
+      const orderStatus = status === 'pending' ? 'confirmed' :
+                          status === 'delivered' ? 'delivered' : 'out-for-delivery';
       await prisma.order.update({
         where: { id: orderId },
-        data: { status: status === 'delivered' ? 'delivered' : 'out-for-delivery' }
+        data: { status: orderStatus }
       });
     }
 
@@ -107,11 +109,11 @@ router.patch('/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const allowed = ['pending', 'in_transit', 'delivered', 'cancelled'];
+    const allowed = ['pending', 'out-for-delivery', 'in_transit', 'delivered', 'cancelled'];
     if (!allowed.includes(status)) {
       return res.status(400).json({ error: `Invalid status. Must be one of: ${allowed.join(', ')}` });
     }
-    const updateData = { status };
+    const updateData = { status: status === 'in_transit' ? 'out-for-delivery' : status };
     if (status === 'delivered') updateData.actualTime = new Date();
 
     const delivery = await prisma.delivery.update({
@@ -123,9 +125,11 @@ router.patch('/:id/status', async (req, res) => {
     // Sync order status when delivery status changes
     if (delivery.orderId) {
       const orderStatus =
-        status === 'pending'    ? 'confirmed' :
-        status === 'in_transit' ? 'out-for-delivery' :
-        status === 'delivered'  ? 'delivered' : 'confirmed';
+        delivery.status === 'pending' ? 'confirmed' :
+        delivery.status === 'out-for-delivery' ? 'out-for-delivery' :
+        delivery.status === 'delivered' ? 'delivered' :
+        delivery.status === 'cancelled' ? 'cancelled' : 'confirmed';
+        
       try {
         await prisma.order.update({ where: { id: delivery.orderId }, data: { status: orderStatus } });
       } catch (_) { /* order might not exist */ }
