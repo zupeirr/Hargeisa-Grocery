@@ -43,16 +43,7 @@ router.post('/', upload.array('images', 10), (req, res) => {
     return res.status(400).json({ error: 'No files uploaded' });
   }
 
-  let baseUrl = process.env.API_BASE_URL;
-  if (!baseUrl) {
-    let protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    if (typeof protocol === 'string' && protocol.includes('https')) {
-      protocol = 'https';
-    } else if (req.get('host') && req.get('host').includes('onrender.com')) {
-      protocol = 'https';
-    }
-    baseUrl = `${protocol}://${req.get('host')}`;
-  }
+  const baseUrl = process.env.BASE_URL || 'https://hargeisa-grocery-2.onrender.com';
   
   const urls = req.files.map((f) => `${baseUrl}/uploads/${f.filename}`);
   res.json({ urls });
