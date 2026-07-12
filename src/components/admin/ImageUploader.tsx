@@ -76,12 +76,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             xhr.onload = () => {
               if (xhr.status >= 200 && xhr.status < 300) {
                 const data = JSON.parse(xhr.responseText);
-                const safeUrl = data.urls[0].replace(/http:\/\/hargeisa-grocery-2\.onrender\.com/g, 'https://hargeisa-grocery-2.onrender.com');
+                const url = data.urls[0];
                 results.push({
                   id: entry.id,
-                  url: safeUrl,
+                  url,
                   preview,
-                  filename: safeUrl.split('/').pop(),
+                  filename: url.split('/').pop(),
                 });
                 resolve();
               } else {

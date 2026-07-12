@@ -2,6 +2,7 @@ const { Router } = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const prisma = require('../lib/prisma');
 
 const router = Router();
 
@@ -47,6 +48,82 @@ router.post('/', upload.array('images', 10), (req, res) => {
   
   const urls = req.files.map((f) => `${baseUrl}/uploads/${f.filename}`);
   res.json({ urls });
+});
+
+// POST /api/upload/migrate-image-urls
+// One-shot migration: rewrites any stored http:// image URLs to https://.
+// Safe to run multiple times (idempotent — skips rows that already use https).
+router.post('/migrate-image-urls', async (req, res) => {
+  const OLD = 'http://hargeisa-grocery-2.onrender.com';
+  const NEW = 'https://hargeisa-grocery-2.onrender.com';
+  const fix = (url) => (typeof url === 'string' ? url.replace(OLD, NEW) : url);
+
+  let productUpdated = 0;
+  let productSkipped = 0;
+  let categoryUpdated = 0;
+  let categorySkipped = 0;
+
+  try {
+    // ── Products ──────────────────────────────────────────────────────────────
+    const products = await prisma.product.findMany({
+      select: { id: true, image: true, images: true },
+    });
+
+    for (const p of products) {
+      const updateData = {};
+
+      // Single `image` field
+      if (p.image && p.image.startsWith(OLD)) {
+        updateData.image = fix(p.image);
+      }
+
+      // JSON-encoded `images` array
+      if (p.images) {
+        try {
+          const arr = JSON.parse(p.images);
+          if (Array.isArray(arr) && arr.some((u) => typeof u === 'string' && u.startsWith(OLD))) {
+            updateData.images = JSON.stringify(arr.map(fix));
+          }
+        } catch (_) {
+          // malformed JSON — skip silently
+        }
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await prisma.product.update({ where: { id: p.id }, data: updateData });
+        productUpdated++;
+      } else {
+        productSkipped++;
+      }
+    }
+
+    // ── Categories ────────────────────────────────────────────────────────────
+    const categories = await prisma.category.findMany({
+      select: { id: true, image: true },
+    });
+
+    for (const c of categories) {
+      if (c.image && c.image.startsWith(OLD)) {
+        await prisma.category.update({
+          where: { id: c.id },
+          data: { image: fix(c.image) },
+        });
+        categoryUpdated++;
+      } else {
+        categorySkipped++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Image URL migration complete',
+      products: { updated: productUpdated, skipped: productSkipped },
+      categories: { updated: categoryUpdated, skipped: categorySkipped },
+    });
+  } catch (err) {
+    console.error('[migrate-image-urls]', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // DELETE /api/upload — removes a file by filename
